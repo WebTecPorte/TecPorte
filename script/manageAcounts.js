@@ -27,7 +27,7 @@ class RegisterController {
         console.log('informações do objeto recuperadas', novoUsuario);
         
         try {
-            const resposta = await fetch("https://localhost:5051/api/Auth/register", {
+            const resposta = await fetch("https://api-crudpim.onrender.com/api/Auth/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -166,7 +166,7 @@ class LoginController {
         try{
             console.log('Tentando fazer login com: ', email);
             
-            const resposta = await fetch("https://localhost:5051/api/Auth/login", {
+            const resposta = await fetch("https://api-crudpim.onrender.com/api/Auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -587,7 +587,7 @@ class ControllerChamado {
         };
 
         try {
-            const resposta = await fetch("https://localhost:5051/api/Chamados", {
+            const resposta = await fetch("https://api-crudpim.onrender.com/api/Chamados", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -626,7 +626,7 @@ class ControllerChamado {
         const token = localStorage.getItem('token');
 
         try {
-            const resposta = await fetch("https://localhost:5051/api/Chamados", {
+            const resposta = await fetch("https://api-crudpim.onrender.com/api/Chamados", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -693,7 +693,7 @@ class ControllerChamado {
         }
         window.chamadoAtivoId = chamado.id;
         try {
-            const response = await fetch(`https://localhost:5051/api/chamados/${chamado.id}`);
+            const response = await fetch(`https://api-crudpim.onrender.com/api/chamados/${chamado.id}`);
 
             if (!response.ok) {
                 throw new Error(`Erro ao buscar detalhes do chamado (HTTP ${response.status})`);
@@ -785,7 +785,7 @@ class ControllerChamado {
         console.log(chamadoFormatado);
         
         try {
-            const response = await fetch(`https://localhost:5051/api/chamados/${this.chamado.id}`, {
+            const response = await fetch(`https://api-crudpim.onrender.com/api/chamados/${this.chamado.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -1102,7 +1102,7 @@ class MsgController {
         }
 
         try {
-            const response = await fetch("https://localhost:5051/api/chat", {
+            const response = await fetch("https://api-crudpim.onrender.com/api/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -1197,7 +1197,7 @@ class MsgController {
             chatInterval = setInterval( async () => {
                 if(popupDetailsChamado.classList.contains('active') && window.chamadoAtivoId == chamadoId) {
 
-                    const response = await fetch(`https://localhost:5051/api/chat/${chamadoId}`, {
+                    const response = await fetch(`https://api-crudpim.onrender.com/api/chat/${chamadoId}`, {
                         headers: {
                             "Authorization": `Bearer ${localStorage.getItem("token")}`
                         }
@@ -1290,7 +1290,7 @@ if (btnConsultarIA) {
         
         displayResposta.textContent = 'Consultando IA...';
 
-        fetch('http://localhost:3000/resposta-ia', {
+        fetch('https://geminiapi-dqk3.onrender.com/resposta-ia', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

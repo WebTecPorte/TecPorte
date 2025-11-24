@@ -200,10 +200,10 @@ class LoginController {
         switch(papel){
             case 'Funcionario':
             case 'Funcionário': 
-                window.location.href = '/pages/employee/main.html';
+                window.location.href = '../pages/employee/main.html';
                 break;
             case 'Aluno':
-                window.location.href = '/pages/student/main.html';
+                window.location.href = '../pages/student/main.html';
                 break;
             default: 
                 console.log('Erro ao redirecionar a página.');

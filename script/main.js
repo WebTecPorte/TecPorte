@@ -537,6 +537,7 @@ class ControllerChamado {
             case 'Aberto': 
                 td_status.classList.add('aberto');
                 break;
+            case 'Aguardando resposta':
             case 'Em andamento': 
                 td_status.classList.add('em-andamento');
                 break;

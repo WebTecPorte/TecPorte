@@ -27,7 +27,7 @@ class RegisterController {
         console.log('informações do objeto recuperadas', novoUsuario);
         
         try {
-            const resposta = await fetch("https://api-crudpim.onrender.com/api/Auth/register", {
+            const resposta = await fetch("https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Auth/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -166,7 +166,7 @@ class LoginController {
         try{
             console.log('Tentando fazer login com: ', email);
             
-            const resposta = await fetch("https://api-crudpim.onrender.com/api/Auth/login", {
+            const resposta = await fetch("https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -587,7 +587,7 @@ class ControllerChamado {
         };
 
         try {
-            const resposta = await fetch("https://api-crudpim.onrender.com/api/Chamados", {
+            const resposta = await fetch("https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Chamados", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -626,7 +626,7 @@ class ControllerChamado {
         const token = localStorage.getItem('token');
 
         try {
-            const resposta = await fetch("https://api-crudpim.onrender.com/api/Chamados", {
+            const resposta = await fetch("https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Chamados", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -693,7 +693,7 @@ class ControllerChamado {
         }
         window.chamadoAtivoId = chamado.id;
         try {
-            const response = await fetch(`https://api-crudpim.onrender.com/api/chamados/${chamado.id}`);
+            const response = await fetch(`https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Chamados/${chamado.id}`);
 
             if (!response.ok) {
                 throw new Error(`Erro ao buscar detalhes do chamado (HTTP ${response.status})`);
@@ -784,14 +784,17 @@ class ControllerChamado {
         };
         console.log(chamadoFormatado);
         
+        //_________TU TEM QUE VER ESSA BOMBA__________
+        //____________________________________________
+        //____________________________________________
         try {
-            const response = await fetch(`https://api-crudpim.onrender.com/api/chamados/${this.chamado.id}`, {
-                method: "PUT",
+            const response = await fetch(`https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Chamados/${this.chamado.id}`, {
+                method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(chamadoFormatado)
+                body: JSON.stringify(chamadoFormatado.Status)
             });
 
             if(!response.ok){
@@ -801,7 +804,6 @@ class ControllerChamado {
 
             if (response.status === 204){
                 console.log("Chamado atualizado com sucesso!");
-                
             }
 
             const text = await response.text();
@@ -1102,7 +1104,7 @@ class MsgController {
         }
 
         try {
-            const response = await fetch("https://api-crudpim.onrender.com/api/chat", {
+            const response = await fetch(`https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/${chamadoId}/resposta`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -1197,7 +1199,7 @@ class MsgController {
             chatInterval = setInterval( async () => {
                 if(popupDetailsChamado.classList.contains('active') && window.chamadoAtivoId == chamadoId) {
 
-                    const response = await fetch(`https://api-crudpim.onrender.com/api/chat/${chamadoId}`, {
+                    const response = await fetch(`https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Chamados/${chamadoId}/respostas`, {
                         headers: {
                             "Authorization": `Bearer ${localStorage.getItem("token")}`
                         }

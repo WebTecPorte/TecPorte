@@ -153,7 +153,8 @@ class LoginController {
             return {
                 email: decoded.email || decoded.sub,
                 papel: decoded.papel || decoded.role,
-                id: decoded.id
+                id: decoded.id,
+                nome: decoded.nome
             };
         } catch (erro) {
             console.error("Erro ao decodificar o token JWT: ", erro);
@@ -1010,8 +1011,8 @@ if (btnRefreshChamado) {
 class ChangeText{
     changeText(user){
         const elementProfileName = document.getElementById('pg_name');
-        if (elementProfileName && user.email)
-            elementProfileName.textContent = user.email;
+        if (elementProfileName && user.nome)
+            elementProfileName.textContent = user.nome;
         else 
             elementProfileName.textContent = 'Error Name'
 

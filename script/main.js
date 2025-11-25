@@ -22,7 +22,8 @@ class RegisterController {
             nome: user.nome,
             email: user.email,
             senha: user.senha,
-            papel: user.papel
+            papel: user.papel,
+            cursoId: user.curso,
         };
         console.log('informações do objeto recuperadas', novoUsuario);
         
@@ -36,7 +37,7 @@ class RegisterController {
         });
 
         if(!resposta.ok){
-            const erro = await resposta.text();
+            const erro = await resposta.json();
             console.error("Erro ao registar: ", erro);
             //document.getElementById('mensagem').textContent = "Erro ao registrar: " + erro;
             alert("Erro ao registrar: " + erro)
@@ -148,13 +149,15 @@ class LoginController {
             }
 
             const payload = token.split('.')[1];
-            const decoded = JSON.parse(atob(payload));
-
+            const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+            const decoded = JSON.parse(atob(base64));
+            console.log(decoded);
+            
+            
             return {
-                email: decoded.email || decoded.sub,
-                papel: decoded.papel || decoded.role,
                 id: decoded.id,
-                nome: decoded.nome
+                papel: decoded.papel || decoded.role,
+                email: decoded.email || decoded.sub,
             };
         } catch (erro) {
             console.error("Erro ao decodificar o token JWT: ", erro);
@@ -176,21 +179,29 @@ class LoginController {
             });
 
             if (!resposta.ok) {
-                const erro = await resposta.text();
+                const erro = await resposta.json();
                 throw new Error(erro);
             }
 
             const data = await resposta.json();
 
-            localStorage.setItem("token", data.token);
-            //document.getElementById('mensagem').textContent = "Login realizado com sucesso!";
+            const tokenData = this.decodeJWT(data.token);
 
-            const userData = this.decodeJWT(data.token);
-            if (userData) {
+            if (tokenData) {
+                const userData = {
+                    token: data.token,
+                    nome: data.nome,
+                    registro: data.registro,
+                    curso: data.curso
+                }
                 this.atualUser = userData;
+                
+                localStorage.setItem("token", JSON.stringify(userData));
             } else {
                 console.warn("Token inválido ou sem dados de usuário.");
             }
+            
+
         } catch (error) {
             console.error('Erro no login: ', error);
             document.getElementById('mensagem').textContent = 'Erro: ' + error.message;
@@ -214,12 +225,17 @@ class LoginController {
     }
 
     verifyLocalStorage(){
-        const userData = this.decodeJWT(localStorage.getItem('token'));
+        const userData = JSON.parse(localStorage.getItem('token'));
+        const tokenData = this.decodeJWT(userData.token);
+        //console.log(userData);
+        //console.log(tokenData);
         
         const currentPath = window.location.pathname;
 
-        if(userData){
-            this.atualUser = userData;       
+        if(tokenData){
+            this.atualUser = {...userData, ...tokenData};
+            console.log(this.atualUser);
+                   
             //console.log('Usuário recuperado do localStorage', this.atualUser);
                 //se o usuário possui dados ele será direcionado para usa página, fazendo um login automatico
             if (currentPath.includes('login.html') || currentPath.includes('cadastro.html'))
@@ -230,7 +246,7 @@ class LoginController {
                 this.redirect(this.atualUser.papel);
 
             //matém um Funcionario nas páginas de Funcionario
-            if (this.atualUser.papel === 'Funcionário' && (!currentPath.includes('employee') && !currentPath.includes('redefinirSenhar.html')))
+            if (this.atualUser.papel === 'Funcionário' && (!currentPath.includes('employee') && !currentPath.includes('redefinirSenha.html')))
                 this.redirect(this.atualUser.papel);
 
         } //Se o usuário não houver dados ele será direcionado para as páginas de login
@@ -273,8 +289,8 @@ class UserBuilder {
         return this;
     }
 
-    definirRA(ra){
-        this.user.ra = ra;
+    definirResgistro(registro){
+        this.user.registro = registro;
         return this;
     }
 
@@ -487,18 +503,16 @@ class ControllerChamado {
 
     coletarDados(){
         let categoria = this.selectValueByid('formCategoria');
-        let raAluno = this.selectValueByid('ra');
-        let curso = this.selectValueByid('studentArea');
         let titulo = this.selectValueByid('call-title');
         let prioridade = this.definirPrioridade(titulo);
-        let description = this.selectValueByid('formDescription');
+        let descricao = this.selectValueByid('formDescription');
 
         let builderChamado = new BuilderChamado();
         builderChamado
             .definirUsuarioId(loginController.atualUser.id)
             .definirCategoria(categoria)
             .definirTitulo(titulo)
-            .definirDescricao(description)
+            .definirDescricao(descricao)
             .definirPrioridade(prioridade);
 
         return builderChamado.Build();
@@ -581,11 +595,10 @@ class ControllerChamado {
         }
 
         const chamadoFormatado = {
-            UsuarioID: chamado.usuarioId,
-            CategoriaID: chamado.categoriaID,
+            usuarioID: chamado.usuarioId,
+            categoriaID: chamado.categoriaID,
             titulo: chamado.titulo,
             descricao: chamado.descricao,
-            status: chamado.status,
             prioridade: chamado.prioridade
         };
 
@@ -637,7 +650,7 @@ class ControllerChamado {
 
             if (!resposta.ok) throw new Error("Erro ao carregar chamados");
 
-            const data = await resposta.json();            
+            const data = await resposta.json();
             data.forEach(ch => {
                 const chamadoAdaptado = {
                     id: ch.idChamado,
@@ -650,14 +663,15 @@ class ControllerChamado {
                     dataCriacao: ch.data,
                     dataAtualizacao: ch.ultimaAtualizacao
                 };
-                console.log(loginController.atualUser.papel);
-                console.log(chamadoAdaptado.usuarioId);
-                console.log(chamadoAdaptado);
+                //console.log(loginController.atualUser.papel);
+                //console.log(loginController.atualUser.nome);
+                //console.log(loginController.atualUser);
                 
-                if (loginController.atualUser.papel == 'Funcionario') {
+                if (loginController.atualUser.papel === 'Funcionario') {
                     this.adicionar(chamadoAdaptado); 
-                } else if (chamadoAdaptado.alunoRa == loginController.atualUser.alunoRa)
-                    this.adicionar(chamadoAdaptado); 
+                } else {
+                    this.verificarAluno(loginController.atualUser, chamadoAdaptado)
+                }
             });
             console.log('Chamados carregados');
         } catch (erro) {
@@ -705,11 +719,15 @@ class ControllerChamado {
 
             const dados = await response.json();
 
+            console.log(chamado);
+            console.log(dados);
+            
+
             this.chamado = chamado;
             this.verificarResolvido(chamado);
             document.getElementById('tituloChamado').textContent = dados.titulo;
             document.getElementById('nomeAluno').textContent = dados.alunoNome;
-            document.getElementById('raAluno').textContent = dados.alunoRa;
+            document.getElementById('raAluno').textContent = dados.alunoRA;
             document.getElementById('cursoAluno').textContent = dados.nomeCurso; //Esse tem que mudar pra ficar bonitinho na vizualização;
             document.getElementById('emailAluno').textContent = dados.alunoEmail;
             document.getElementById('idChamado').textContent = dados.id;
@@ -731,6 +749,28 @@ class ControllerChamado {
         } catch (erro) {
             console.error('Erro ao abrir detalhes do chamado: ', erro);
             alert('Não foi possível carregar os detalhes do chamado. Tente novamente.');
+        }
+    }
+
+    async verificarAluno(user, chamado){
+        try {
+            const response = await fetch(`https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Chamados/${chamado.id}`);
+
+            if (!response.ok) {
+                throw new Error(`Erro ao buscar detalhes do chamado (HTTP ${response.status})`);
+            }
+
+            const dados = await response.json();
+
+            console.log(chamado);
+            console.log(dados);
+            
+            if(user.registro == dados.alunoRA)
+                this.adicionar(chamado)
+
+            this.chamado = chamado;
+        } catch (erro) {
+            console.error('Erro ao identificar o chamado: ', erro);
         }
     }
 
@@ -1108,20 +1148,22 @@ class MsgController {
         }
 
         try {
-            const response = await fetch(`https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/${chamadoId}/resposta`, {
+            const tokenData = JSON.parse(localStorage.getItem("token"));
+            console.log(tokenData.token);
+            
+            const response = await fetch(`https://apicrudpim-brbbbxgxh9aqhjfs.canadacentral-01.azurewebsites.net/api/Chamados/${chamadoId}/resposta`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                    "Authorization": `Bearer ${tokenData.token}`
                 },
                 body: JSON.stringify({
-                    ChamadoID: mensagem.chamadoId,
-                    UsuarioID: mensagem.usuarioId,
-                    Mensagem: mensagem.mensagem
-
+                    usuarioID: mensagem.usuarioId,
+                    mensagem: mensagem.mensagem
                 })
             });
-
+            console.log(response);
+            
             if (!response.ok) throw new Error("Erro ao enviar mensagem");
 
             const data = await response.json();
@@ -1193,9 +1235,9 @@ class MsgController {
         const chatDisplay = document.getElementById('ver-msg');
         const popupDetailsChamado = document.querySelector('.details-chamado');
 
-        console.log(popupDetailsChamado.classList.contains('active'));
-        console.log(window.chamadoAtivoId);
-        console.log(chamadoId);
+        //console.log(popupDetailsChamado.classList.contains('active'));
+        //console.log(window.chamadoAtivoId);
+        //console.log(chamadoId);
         
         
 
@@ -1221,18 +1263,19 @@ class MsgController {
 
                     mensagens.forEach(msg => {                
                         this.adicionarMensagem({
+                            nome: msg.autorNome,
                             mensagem: msg.mensagem,
-                            usuarioId: msg.usuarioID,
                             dataEnvio: new Date(msg.dataEnvio)
                         });
+                        //console.log(msg);
                     });
 
                 } else {
                     clearInterval(chatInterval);
                     chatInterval = null;
                 }
-                console.log('a');
-                console.log('b');
+                //console.log('a');
+                //console.log('b');
                 
             }, 3000);
              
@@ -1252,6 +1295,8 @@ class MsgController {
             return;
         }
 
+        //console.log(mensagem);
+
         const currentUserId = this.loginController.atualUser.id;
         const isCurrentUser = mensagem.usuarioId == currentUserId;
         
@@ -1259,6 +1304,10 @@ class MsgController {
         const messageWrapper = document.createElement('div');
         messageWrapper.classList.add('balao-de-fala');
         messageWrapper.classList.add(isCurrentUser ? 'usuario-atual' : 'outro-usuario');
+
+        const nameMsg = document.createElement('p');
+        nameMsg.classList.add('nomeAutor-mensagem');
+        nameMsg.textContent = mensagem.nome;
 
         const txt = document.createElement('p');
         txt.classList.add('mensagem-txt');
@@ -1271,6 +1320,7 @@ class MsgController {
 
         dataMsg.textContent = timeStr;
 
+        messageWrapper.appendChild(nameMsg);
         messageWrapper.appendChild(txt);
         messageWrapper.appendChild(dataMsg);
         chatDisplay.appendChild(messageWrapper);
@@ -1296,32 +1346,37 @@ if (btnConsultarIA) {
         
         displayResposta.textContent = 'Consultando IA...';
 
-        fetch('https://geminiapi-dqk3.onrender.com/resposta-ia', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify ({
-                prompt: pergunta
+        try {
+            fetch('https://geminiapi-dqk3.onrender.com/resposta-ia', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify ({
+                    prompt: pergunta
+                })
             })
-        })
-            .then(res => res.json())
-            .then(dados => {
-                displayResposta.innerHTML = dados.resposta
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/\n/g, '<br>');
+                .then(res => res.json())
+                .then(dados => {
+                    displayResposta.innerHTML = dados.resposta
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/\n/g, '<br>');
 
-            })
-            .catch(err => console.error('Erro:', err));
+                })
+                .catch(err => console.error('Erro:', err));
 
-        const chatIA = document.querySelector('.chat-ia');
-        if (chatIA) {
-            chatIA.classList.add('active');
-        }
-        const displayDadosChamado = document.querySelector('.dados-chamado');
-        if (displayDadosChamado) {
-            displayDadosChamado.scrollTop = displayDadosChamado.scrollHeight
+            const chatIA = document.querySelector('.chat-ia');
+            if (chatIA) {
+                chatIA.classList.add('active');
+            }
+            const displayDadosChamado = document.querySelector('.dados-chamado');
+            if (displayDadosChamado) {
+                displayDadosChamado.scrollTop = displayDadosChamado.scrollHeight
+            }
+        } catch (erro) {
+            console.error(erro);
+            displayResposta.textContent = 'Erro ao consultar IA'
         }
     });
 }

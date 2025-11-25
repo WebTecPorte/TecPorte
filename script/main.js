@@ -533,7 +533,8 @@ class ControllerChamado {
         td_dataAtualizacao.innerHTML = `<p>${chamado.dataAtualizacao.toLocaleString('pt-BR')}</p>`;
         
         td_titulo.classList.add('left');
-
+        console.log(chamado);
+        
         switch(chamado.status){
             case 'Aberto': 
                 td_status.classList.add('aberto');
@@ -651,6 +652,7 @@ class ControllerChamado {
                 };
                 console.log(loginController.atualUser.papel);
                 console.log(chamadoAdaptado.usuarioId);
+                console.log(chamadoAdaptado);
                 
                 if (loginController.atualUser.papel == 'Funcionario') {
                     this.adicionar(chamadoAdaptado); 

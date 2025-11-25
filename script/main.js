@@ -529,8 +529,8 @@ class ControllerChamado {
         td_status.innerHTML = `<p>${chamado.status}</p>`;
         td_prioridade.innerHTML = `<p>${chamado.prioridade}</p>`;
         td_idChamado.innerHTML = `<p>${chamado.id}</p>`;
-        td_dataCriacao.innerHTML = `<p>${chamado.dataCriacao.toLocaleString('pt-BR')}</p>`;
-        td_dataAtualizacao.innerHTML = `<p>${chamado.dataAtualizacao.toLocaleString('pt-BR')}</p>`;
+        td_dataCriacao.innerHTML = `<p>${chamado.dataCriacao}</p>`;
+        td_dataAtualizacao.innerHTML = `<p>${chamado.dataAtualizacao}</p>`;
         
         td_titulo.classList.add('left');
         console.log(chamado);
@@ -583,10 +583,10 @@ class ControllerChamado {
         const chamadoFormatado = {
             UsuarioID: chamado.usuarioId,
             CategoriaID: chamado.categoriaID,
-            Titulo: chamado.titulo,
-            Descricao: chamado.descricao,
-            Status: chamado.status,
-            Prioridade: chamado.prioridade
+            titulo: chamado.titulo,
+            descricao: chamado.descricao,
+            status: chamado.status,
+            prioridade: chamado.prioridade
         };
 
         try {
@@ -640,15 +640,15 @@ class ControllerChamado {
             const data = await resposta.json();            
             data.forEach(ch => {
                 const chamadoAdaptado = {
-                    id: ch.id,
+                    id: ch.idChamado,
                     titulo: ch.titulo,
                     descricao: ch.descricao,
                     prioridade: ch.prioridade,
-                    categoriaID: ch.categoriaID,
+                    curso: ch.nomeCurso,
                     status: ch.status,
-                    usuarioId: ch.usuarioID,
-                    dataCriacao: new Date(ch.dataCriacao),
-                    dataAtualizacao: new Date(ch.dataAtualizacao)
+                    alunoNome: ch.alunoNome,
+                    dataCriacao: ch.data,
+                    dataAtualizacao: ch.ultimaAtualizacao
                 };
                 console.log(loginController.atualUser.papel);
                 console.log(chamadoAdaptado.usuarioId);
@@ -656,7 +656,7 @@ class ControllerChamado {
                 
                 if (loginController.atualUser.papel == 'Funcionario') {
                     this.adicionar(chamadoAdaptado); 
-                } else if (chamadoAdaptado.usuarioId == loginController.atualUser.id)
+                } else if (chamadoAdaptado.alunoRa == loginController.atualUser.alunoRa)
                     this.adicionar(chamadoAdaptado); 
             });
             console.log('Chamados carregados');
@@ -708,12 +708,12 @@ class ControllerChamado {
             this.chamado = chamado;
             this.verificarResolvido(chamado);
             document.getElementById('tituloChamado').textContent = dados.titulo;
-            document.getElementById('nomeAluno').textContent = dados.nomeUsuario;
-            document.getElementById('raAluno').textContent = dados.ra;
-            document.getElementById('cursoAluno').textContent = dados.curso; //Esse tem que mudar pra ficar bonitinho na vizualização;
-            document.getElementById('emailAluno').textContent = dados.emailUsuario;
+            document.getElementById('nomeAluno').textContent = dados.alunoNome;
+            document.getElementById('raAluno').textContent = dados.alunoRa;
+            document.getElementById('cursoAluno').textContent = dados.nomeCurso; //Esse tem que mudar pra ficar bonitinho na vizualização;
+            document.getElementById('emailAluno').textContent = dados.alunoEmail;
             document.getElementById('idChamado').textContent = dados.id;
-            document.getElementById('categoria').textContent = dados.categoria;
+            document.getElementById('categoria').textContent = dados.nomeCategoria;
             document.getElementById('status').textContent = dados.status;
             document.getElementById('prioridade').textContent = dados.prioridade;
             document.getElementById('description').textContent = dados.descricao;
